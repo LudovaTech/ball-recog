@@ -13,15 +13,10 @@ labels = None
 min_confidence = 0.5
 
 try:
-    # load the model, alloc the model file on the heap if we have at least 64K free after loading
-    net = tf.load("trained.tflite", load_to_fb=uos.stat('trained.tflite')[6] > (gc.mem_free() - (64*1024)))
+    # Load built in model
+    labels, net = tf.load_builtin_model('trained')
 except Exception as e:
-    raise Exception('Failed to load "trained.tflite", did you copy the .tflite and labels.txt file onto the mass-storage device? (' + str(e) + ')')
-
-try:
-    labels = [line.rstrip('\n') for line in open("labels.txt")]
-except Exception as e:
-    raise Exception('Failed to load "labels.txt", did you copy the .tflite and labels.txt file onto the mass-storage device? (' + str(e) + ')')
+    raise Exception(e)
 
 colors = [ # Add more colors if you are detecting more than 7 types of classes at once.
     (255,   0,   0),
