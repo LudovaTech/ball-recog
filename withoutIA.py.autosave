@@ -6,8 +6,19 @@
 import sensor
 import time
 import machine
+import pyb
 
-from send_real_data import send_data
+###########send real data
+from random import randint, uniform
+
+def r():
+    return round(uniform(0, 150), randint(0, 5))
+
+def send_data(uart, bx, by):
+    uart.write(
+    f"b{bx},{by}m{r()},{r()}p{r()},{r()}"
+    )
+###########
 
 sensor.reset()  # Reset and initialize the sensor.
 sensor.set_pixformat(sensor.RGB565)  # Set pixel format to RGB565 (or GRAYSCALE)
@@ -41,7 +52,9 @@ def find_ball_blobs(
       ):
       img.draw_rectangle(blob.rect(), color=(0,255,0))
       img.draw_cross(blob.cx(), blob.cy(), color=(0,255,0))
+      #TODO On retourne uniquement le premier
       return blob.cx(), blob.cy()
+    
 
 def find_ball_circle(
     colors,
@@ -79,5 +92,6 @@ while True:
         v = find_ball_blobs([(0, 100, 28, 82, 20, 66)], z1_roi)
     else:
         v = find_ball_blobs([(31, 83, 22, 44, -6, 46)], z1_roi)
-    send_data(uart, *v)
+    if v is not None:
+        send_data(uart, *v)
     #print(f"FPS : {clock.fps()}")
