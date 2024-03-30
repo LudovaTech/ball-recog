@@ -15,8 +15,7 @@ clock = time.clock()                # Create a clock object to track the FPS.
 uart = machine.UART(1, 115200)
 
 def send_data(uart, bx, by, gx, gy):
-    uart.write(f"b{bx},{by}m{gx},{gy}p{0},{0}#")
-
+    uart.write(f"b{bx},{by}m{gx},{gy}p{0},{0}")
 
 ball_x = 0
 ball_y = 0
