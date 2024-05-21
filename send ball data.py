@@ -1,14 +1,14 @@
-import sensor, image, time, math, machine, pyb
+import sensor, image, time, math, machine
 
 sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
 sensor.set_framesize(sensor.QVGA)
-sensor.set_auto_exposure(False)
+sensor.set_auto_exposure(False, exposure_us=57200*3) # *1: 40ms, *3: 64ms, *6: 130ms
 sensor.set_auto_gain(False)
 sensor.set_auto_whitebal(False)
-sensor.set_brightness(1)
-sensor.set_saturation(-2)
-sensor.set_contrast(-2)
+#sensor.set_brightness(1)
+#sensor.set_saturation(-2)
+#sensor.set_contrast(-2)
 
 # Réglages luminosité pour la RT
 #sensor.__write_reg(0x5000, 0x27 | 0x80)
@@ -23,16 +23,24 @@ sensor.set_contrast(-2)
 
 sensor.skip_frames(time = 300)
 
-uart = pyb.UART(3, 115200)
+uart = machine.UART(1, 115200)
 led = machine.LED("LED_GREEN")
 
-robot = "SN9"
+YELLOW_GOAL = "YELLOW"
+BLUE_GOAL = "BLUE"
+RED = (255, 0, 0)
+YELLOW = (255, 255, 0)
+BLUE = (0, 0, 255)
+
+attackedGoal = YELLOW_GOAL
+robot = "SN10"
+
 if robot == "SN9":
     offset_x = 10
     offset_y = 11
 elif robot == "SN10":
-    offset_x = 7
-    offset_y = 5
+    offset_x = 16
+    offset_y = 3
 
 
 def realX(x):
@@ -61,14 +69,24 @@ def getRealCoord(x, y):
     distance = getRealDistance(x, y)
     return distance * math.cos(angle), distance * math.sin(angle)
 
-
-# TODO : blob filtering
-def detectBlob(colorThreshold, pixelNumberThreshold, showBlob=True):
+def detectBlob(colorThreshold, pixelNumberThreshold, showAllBlobs=True, color=(255, 255, 255)):
+    maxDetectedPixels = 0
+    biggestBlob = None
     blobX, blobY = (0, 0)
-    for blob in img.find_blobs([colorThreshold], pixels_threshold=pixelNumberThreshold, merge=False):
-        if showBlob:
-            img.draw_rectangle(blob.rect())
-        blobX, blobY = getRealCoord(realX(blob.cx()), realY(blob.cy()))
+    for blob in img.find_blobs([colorThreshold], pixels_threshold=pixelNumberThreshold, merge=True):
+        if blob.pixels() > maxDetectedPixels:
+            if color == RED and blob.pixels() > 300:
+                pass
+            else:
+                blobX, blobY = getRealCoord(realX(blob.cx()), realY(blob.cy()))
+                maxDetectedPixels = blob.pixels()
+                biggestBlob = blob
+
+        if showAllBlobs:
+            img.draw_rectangle(blob.rect(), color=color)
+
+    if biggestBlob != None:
+        img.draw_rectangle(biggestBlob.rect(), color=color)
     return round(blobX), round(blobY)
 
 compteur = 0
@@ -77,6 +95,9 @@ while(True):
     time.clock().tick()
     img = sensor.snapshot()
 
+    img.draw_circle(realX(0), realY(0), 20, color=(0, 0, 0), fill=True)
+    img.draw_circle(realX(0), realY(0), 1)
+
     compteur += 1
     if compteur%8 == 0:
         led.on()
@@ -84,12 +105,16 @@ while(True):
     else:
         led.off()
 
-    # Réglages de luminosité pour la RT
-    #img.gamma(gamma=1.0, contrast=1.2, brightness=0)
+    ballCoord = detectBlob((0, 100, 15, 127, -128, 127), 5, False, RED)
+    yellowGoalCoord = detectBlob((0, 100, -128, -10, 20, 127), 80, True, YELLOW)
+    blueGoalCoord = detectBlob((0, 100, -128, 127, -128, -20), 80, True, BLUE)
 
-    ballCoord = detectBlob((27, 100, 22, 127, -128, 127), 10, True)
-    myGoalCoord = detectBlob((35, 100, -128, -4, 3, 127), 80, False)
-    enemyGoalCoord = detectBlob((0, 0, -128, -128, -128, -128), 80, False)
+    if attackedGoal == YELLOW_GOAL:
+        myGoalCoord = blueGoalCoord
+        enemyGoalCoord = yellowGoalCoord
+    elif attackedGoal == BLUE_GOAL:
+        myGoalCoord = yellowGoalCoord
+        enemyGoalCoord = blueGoalCoord
 
     # Send data
     #data = f"b{ballCoord[0]},{ballCoord[1]}g{myGoalCoord[0]},{myGoalCoord[1]}G{enemyGoalCoord[0]},{enemyGoalCoord[1]}"
@@ -101,6 +126,4 @@ while(True):
                                                                  enemyGoalCoord[0],
                                                                  enemyGoalCoord[1])
     uart.write(data)
-    print(data)
-    img.draw_circle(realX(0), realY(0), 32, (0, 0, 0), fill=True)
-    img.draw_circle(realX(0), realY(0), 1)
+    #print(data)
