@@ -3,7 +3,7 @@ import sensor, image, time, math, machine
 sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
 sensor.set_framesize(sensor.QVGA)
-sensor.set_auto_exposure(False, exposure_us=int(57200*0.6)) # *1: 40ms, *3: 64ms, *6: 130ms
+sensor.set_auto_exposure(False, exposure_us=int(57200//3)) # *1: 40ms, *3: 64ms, *6: 130ms
 sensor.set_auto_gain(False)
 sensor.set_auto_whitebal(False)
 #sensor.set_brightness(1)
@@ -20,7 +20,6 @@ sensor.set_auto_whitebal(False)
 #sensor.__write_reg(0x5847, 0x00)
 #sensor.__write_reg(0x5848, 0x1)
 #sensor.__write_reg(0x5849, 0x0)
-
 sensor.skip_frames(time = 300)
 
 uart = machine.UART(1, 115200)
@@ -34,14 +33,14 @@ BLUE = (0, 0, 255)
 
 # PARAMETRES A CHANGER
 attackedGoal = YELLOW_GOAL
-robot = "SN10"
+robot = "SN9"
 
 if robot == "SN9":
-    offset_x = 10
-    offset_y = 11
+    offset_x = 0
+    offset_y = -6
 elif robot == "SN10":
     offset_x = 16
-    offset_y = 3
+    offset_y = -15
 
 
 def realX(x):
@@ -93,18 +92,19 @@ def detectBlob(colorThreshold, pixelNumberThreshold, showAllBlobs=True, color=(2
 compteur = 0
 
 # Paramètres pour l'ajustement de l'exposition
-min_exposure_us = 57200 // 2  # Temps d'exposition minimum en microsecondes
+min_exposure_us = 57200 // 3  # Temps d'exposition minimum en microsecondes
 max_exposure_us = 57200 * 10  # Temps d'exposition maximum en microsecondes
 exposure_step = 57200 // 4  # Incrément/décrément du temps d'exposition en microsecondes
-target_brightness = 20  # Luminosité cible (valeur entre 0 et 100)
-tolerance = 4  # Tolérance de luminosité acceptable
-ADJUST_BRIGHTNESS = True
+target_brightness = 16  # Luminosité cible (valeur entre 0 et 100)
+tolerance = 5  # Tolérance de luminosité acceptable
+ADJUST_BRIGHTNESS = False
 
 while(True):
     time.clock().tick()
     img = sensor.snapshot()
 
-    img.draw_circle(realX(0), realY(0), 20, color=(0, 0, 0), fill=True)
+    # radius = 164 pour SN9 et radius = 156 pour SN10
+    img.draw_circle(realX(0), realY(0), 164, color=(0, 0, 0), thickness= 100, fill=False)
     img.draw_circle(realX(0), realY(0), 1)
 
     stats = img.get_statistics()
@@ -117,9 +117,9 @@ while(True):
     else:
         led.off()
 
-    ballCoord = detectBlob((0, 100, 28, 127, 24, 127), 5, False, RED)
-    yellowGoalCoord = detectBlob((0, 100, -128, -8, 27, 127), 80, True, YELLOW)
-    blueGoalCoord = (0,0) #detectBlob((0, 100, -4, 127, -128, -15), 80, True, BLUE)
+    ballCoord = detectBlob((0, 100, 22, 127, -128, 127), 5, False, RED)
+    yellowGoalCoord = detectBlob((0, 100, -16, 127, 17, 127), 120, False, YELLOW)
+    blueGoalCoord = detectBlob((0, 100, -128, 127, -128, -18), 80, False, BLUE)
 
     if attackedGoal == YELLOW_GOAL:
         myGoalCoord = blueGoalCoord
