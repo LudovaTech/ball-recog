@@ -3,7 +3,7 @@ import sensor, image, time, math, machine
 sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
 sensor.set_framesize(sensor.QVGA)
-sensor.set_auto_exposure(False, exposure_us=int(57200//3)) # *1: 40ms, *3: 64ms, *6: 130ms
+sensor.set_auto_exposure(False, exposure_us=int(57200*2.6)) # *1: 40ms, *3: 64ms, *6: 130ms
 sensor.set_auto_gain(False)
 sensor.set_auto_whitebal(False)
 #sensor.set_brightness(1)
@@ -32,15 +32,15 @@ YELLOW = (255, 255, 0)
 BLUE = (0, 0, 255)
 
 # PARAMETRES A CHANGER
-attackedGoal = YELLOW_GOAL
+attackedGoal = BLUE_GOAL
 robot = "SN9"
 
 if robot == "SN9":
-    offset_x = 0
-    offset_y = -6
+    offset_x = 3
+    offset_y = -3
 elif robot == "SN10":
     offset_x = 16
-    offset_y = -15
+    offset_y = -5
 
 
 def realX(x):
@@ -70,26 +70,31 @@ def getRealCoord(x, y):
     return distance * math.cos(angle), distance * math.sin(angle)
 
 def detectBlob(colorThreshold, pixelNumberThreshold, showAllBlobs=True, color=(255, 255, 255)):
-    maxDetectedPixels = 0
-    biggestBlob = None
-    blobX, blobY = (0, 0)
-    for blob in img.find_blobs([colorThreshold], pixels_threshold=pixelNumberThreshold, merge=True):
-        if blob.pixels() > maxDetectedPixels:
-            if color == RED and blob.pixels() > 300:
-                pass
-            else:
-                blobX, blobY = realX(blob.cx()), realY(blob.cy())
-                maxDetectedPixels = blob.pixels()
-                biggestBlob = blob
+    top3Blobs = [(0,0), (0,0), (0,0)]
+    nbBlobsFound = 0
 
-        if showAllBlobs:
-            img.draw_rectangle(blob.rect(), color=color)
+    blobs = img.find_blobs([colorThreshold], pixels_threshold=pixelNumberThreshold, merge=True)
+    sortedBlobs = sorted(blobs, key=lambda b: b.pixels(), reverse=True)
 
-    if biggestBlob != None:
-        img.draw_rectangle(biggestBlob.rect(), color=color)
-    return round(blobX), round(blobY)
+    for blob in sortedBlobs:
+        if (color != RED and nbBlobsFound >= 3) or (color == RED and nbBlobsFound >= 1):
+            break
+
+        if color == RED and blob.pixels() > 300:
+           pass
+
+        top3Blobs[nbBlobsFound] = (realX(blob.cx()), realY(blob.cy()))
+        img.draw_rectangle(blob.rect(), color=color, thickness=2)
+        nbBlobsFound += 1
+
+    if showAllBlobs:
+       for blob in blobs:
+           img.draw_rectangle(blob.rect(), color=color, thickness=1)
+
+    return top3Blobs
 
 compteur = 0
+time_diff = 0
 
 # Paramètres pour l'ajustement de l'exposition
 min_exposure_us = 57200 // 3  # Temps d'exposition minimum en microsecondes
@@ -101,10 +106,13 @@ ADJUST_BRIGHTNESS = False
 
 while(True):
     time.clock().tick()
+    begin = time.ticks_ms()
     img = sensor.snapshot()
+    img.gamma(gamma=1, brightness=0, contrast=1.1)
 
     # radius = 164 pour SN9 et radius = 156 pour SN10
-    img.draw_circle(realX(0), realY(0), 164, color=(0, 0, 0), thickness= 100, fill=False)
+    img.draw_circle(realX(0), realY(0), 24, color=(0, 0, 0), fill=True)
+    img.draw_circle(realX(0), realY(0), 156, color=(0, 0, 0), thickness= 100, fill=False)
     img.draw_circle(realX(0), realY(0), 1)
 
     stats = img.get_statistics()
@@ -117,9 +125,10 @@ while(True):
     else:
         led.off()
 
-    ballCoord = detectBlob((0, 100, 22, 127, -128, 127), 5, False, RED)
-    yellowGoalCoord = detectBlob((0, 100, -16, 127, 17, 127), 120, False, YELLOW)
-    blueGoalCoord = detectBlob((0, 100, -128, 127, -128, -18), 80, False, BLUE)
+    ballCoord = detectBlob((0, 100, 32, 127, -128, 127), 5, False, RED)
+    yellowGoalCoord = detectBlob((0, 100, -10, 2, 21, 127), 120, False, YELLOW)
+    blueGoalCoord = detectBlob((0, 100, -128, -3, -128, 1), 80, False, BLUE)
+
 
     if attackedGoal == YELLOW_GOAL:
         myGoalCoord = blueGoalCoord
@@ -145,15 +154,28 @@ while(True):
 
     # Send data
     #data = f"b{ballCoord[0]},{ballCoord[1]}g{myGoalCoord[0]},{myGoalCoord[1]}G{enemyGoalCoord[0]},{enemyGoalCoord[1]}"
+    data = "b{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}e".format(ballCoord[0][0],
+                                                                                                                         ballCoord[0][1],
 
-    data = "b{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}e".format(ballCoord[0],
-                                                                 ballCoord[1],
-                                                                 myGoalCoord[0],
-                                                                 myGoalCoord[1],
-                                                                 enemyGoalCoord[0],
-                                                                 enemyGoalCoord[1])
+                                                                                                                         myGoalCoord[0][0],
+                                                                                                                         myGoalCoord[0][1],
+                                                                                                                         myGoalCoord[1][0],
+                                                                                                                         myGoalCoord[1][1],
+                                                                                                                         myGoalCoord[2][0],
+                                                                                                                         myGoalCoord[2][1],
+
+                                                                                                                         enemyGoalCoord[0][0],
+                                                                                                                         enemyGoalCoord[0][1],
+                                                                                                                         enemyGoalCoord[1][0],
+                                                                                                                         enemyGoalCoord[1][1],
+                                                                                                                         enemyGoalCoord[2][0],
+                                                                                                                         enemyGoalCoord[2][1])
     uart.write(data)
     print(data)
 
     img.draw_string(0, 0, "Brightness: %.0f" % brightness, color=(255, 255, 255))
     img.draw_string(0, 10, "Expo: %d us" % sensor.get_exposure_us(), color=(255, 255, 255))
+
+    time_diff = time.ticks_ms() - begin
+    #print(f'temps total: {time_diff}ms')
+
