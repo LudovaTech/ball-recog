@@ -3,7 +3,7 @@ import sensor, image, time, math, machine
 sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
 sensor.set_framesize(sensor.QVGA)
-sensor.set_auto_exposure(False, exposure_us=int(57200*2.6)) # *1: 40ms, *3: 64ms, *6: 130ms
+sensor.set_auto_exposure(False, exposure_us=int(57200*1.4)) # *1: 40ms, *3: 64ms, *6: 130ms
 sensor.set_auto_gain(False)
 sensor.set_auto_whitebal(False)
 #sensor.set_brightness(1)
@@ -23,6 +23,7 @@ sensor.set_auto_whitebal(False)
 sensor.skip_frames(time = 300)
 
 uart = machine.UART(1, 115200)
+wdt = machine.WDT(timeout=1000)
 led = machine.LED("LED_GREEN")
 
 YELLOW_GOAL = "YELLOW"
@@ -105,6 +106,7 @@ tolerance = 5  # Tolérance de luminosité acceptable
 ADJUST_BRIGHTNESS = False
 
 while(True):
+    wdt.feed()
     time.clock().tick()
     begin = time.ticks_ms()
     img = sensor.snapshot()
@@ -112,22 +114,22 @@ while(True):
 
     # radius = 164 pour SN9 et radius = 156 pour SN10
     img.draw_circle(realX(0), realY(0), 24, color=(0, 0, 0), fill=True)
-    img.draw_circle(realX(0), realY(0), 156, color=(0, 0, 0), thickness= 100, fill=False)
+    img.draw_circle(realX(0), realY(0), 166, color=(0, 0, 0), thickness= 100, fill=False)
     img.draw_circle(realX(0), realY(0), 1)
 
     stats = img.get_statistics()
     brightness = stats[0]
 
     compteur += 1
-    if compteur%8 == 0:
+    if compteur%4 == 0:
         led.on()
         compteur = 0
     else:
         led.off()
 
     ballCoord = detectBlob((0, 100, 32, 127, -128, 127), 5, False, RED)
-    yellowGoalCoord = detectBlob((0, 100, -10, 2, 21, 127), 120, False, YELLOW)
-    blueGoalCoord = detectBlob((0, 100, -128, -3, -128, 1), 80, False, BLUE)
+    yellowGoalCoord = detectBlob((0, 24, -128, -2, 17, 127), 120, False, YELLOW)
+    blueGoalCoord = detectBlob((7, 18, -128, -5, -128, 8), 80, False, BLUE)
 
 
     if attackedGoal == YELLOW_GOAL:
