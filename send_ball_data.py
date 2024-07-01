@@ -6,10 +6,6 @@ sensor.set_framesize(sensor.QVGA)
 sensor.set_auto_exposure(False, exposure_us=int(57200*1.4)) # *1: 40ms, *3: 64ms, *6: 130ms
 sensor.set_auto_gain(False)
 sensor.set_auto_whitebal(False)
-#sensor.set_brightness(1)
-#sensor.set_saturation(-2)
-#sensor.set_contrast(-2)
-
 # Réglages luminosité pour la RT
 #sensor.__write_reg(0x5000, 0x27 | 0x80)
 #sensor.__write_reg(0x5842, 0)
@@ -22,20 +18,29 @@ sensor.set_auto_whitebal(False)
 #sensor.__write_reg(0x5849, 0x0)
 sensor.skip_frames(time = 300)
 
-uart = machine.UART(1, 115200)
-wdt = machine.WDT(timeout=1000)
-led = machine.LED("LED_GREEN")
-
+# CONSTANTES
 YELLOW_GOAL = "YELLOW"
 BLUE_GOAL = "BLUE"
 RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
 BLUE = (0, 0, 255)
 
-# PARAMETRES A CHANGER
-attackedGoal = BLUE_GOAL
-robot = "SN9"
 
+# !!!!!!!!!!!!!!!!!!!!!!! PARAMETRES A CHANGER !!!!!!!!!!!!!!!!!!!!!!!
+# --------------------------------------------------------------------
+
+attackedGoal = BLUE_GOAL
+robot = "SN10"
+
+# --------------------------------------------------------------------
+
+
+# INSTANCES
+uart = machine.UART(1, 115200)
+wdt = machine.WDT(timeout=3000)
+led = machine.LED("LED_GREEN")
+
+# PARAMETRES DEPENDANTS DU ROBOT
 if robot == "SN9":
     offset_x = 3
     offset_y = -3
@@ -50,7 +55,7 @@ def realX(x):
 def realY(y):
     return -y + sensor.height()//2 - offset_y
 
-# TODO : corriger la formule
+# TODO : corriger ou supprimer la formule
 def getRealDistance(x, y):
     return 0.68 * math.pow(2.71828, 0.046 * math.sqrt(x**2 + y**2)) + 8
 
@@ -94,8 +99,6 @@ def detectBlob(colorThreshold, pixelNumberThreshold, showAllBlobs=True, color=(2
 
     return top3Blobs
 
-compteur = 0
-time_diff = 0
 
 # Paramètres pour l'ajustement de l'exposition
 min_exposure_us = 57200 // 3  # Temps d'exposition minimum en microsecondes
@@ -104,6 +107,8 @@ exposure_step = 57200 // 4  # Incrément/décrément du temps d'exposition en mi
 target_brightness = 16  # Luminosité cible (valeur entre 0 et 100)
 tolerance = 5  # Tolérance de luminosité acceptable
 ADJUST_BRIGHTNESS = False
+
+compteur = 0
 
 while(True):
     wdt.feed()
