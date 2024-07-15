@@ -145,14 +145,6 @@ while(True):
         yellowGoalCoord = detectBlob((0, 19, -2, 127, 2, 127), 80, False, YELLOW)
         blueGoalCoord = detectBlob((7, 18, -128, -5, -128, 8), 80, False, BLUE)
 
-
-        if attackedGoal == YELLOW_GOAL:
-            myGoalCoord = blueGoalCoord
-            enemyGoalCoord = yellowGoalCoord
-        elif attackedGoal == BLUE_GOAL:
-            myGoalCoord = yellowGoalCoord
-            enemyGoalCoord = blueGoalCoord
-
         #if ADJUST_BRIGHTNESS == True:
 
         #        if brightness < target_brightness - tolerance:
@@ -169,24 +161,23 @@ while(True):
         #                sensor.skip_frames(time = 50)
 
         # Send data
-        #data = f"b{ballCoord[0]},{ballCoord[1]}g{myGoalCoord[0]},{myGoalCoord[1]}G{enemyGoalCoord[0]},{enemyGoalCoord[1]}"
         #time_diff = time.ticks_ms() - begin
         data = "b{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}{:+04d}e".format(ballCoord[0][0],
                                                                                                                              ballCoord[0][1],
 
-                                                                                                                             myGoalCoord[0][0],
-                                                                                                                             myGoalCoord[0][1],
-                                                                                                                             myGoalCoord[1][0],
-                                                                                                                             myGoalCoord[1][1],
-                                                                                                                             myGoalCoord[2][0],
-                                                                                                                             myGoalCoord[2][1],
+                                                                                                                             yellowGoalCoord[0][0],
+                                                                                                                             yellowGoalCoord[0][1],
+                                                                                                                             yellowGoalCoord[1][0],
+                                                                                                                             yellowGoalCoord[1][1],
+                                                                                                                             yellowGoalCoord[2][0],
+                                                                                                                             yellowGoalCoord[2][1],
 
-                                                                                                                             enemyGoalCoord[0][0],
-                                                                                                                             enemyGoalCoord[0][1],
-                                                                                                                             enemyGoalCoord[1][0],
-                                                                                                                             enemyGoalCoord[1][1],
-                                                                                                                             enemyGoalCoord[2][0],
-                                                                                                                             enemyGoalCoord[2][1])
+                                                                                                                             blueGoalCoord[0][0],
+                                                                                                                             blueGoalCoord[0][1],
+                                                                                                                             blueGoalCoord[1][0],
+                                                                                                                             blueGoalCoord[1][1],
+                                                                                                                             blueGoalCoord[2][0],
+                                                                                                                             blueGoalCoord[2][1])
         uart.write(data)
         print(data)
 
