@@ -3,8 +3,8 @@ import sensor, image, time, math, machine
 sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
 sensor.set_framesize(sensor.QVGA)
-sensor.set_auto_exposure(False, exposure_us=int(57200*(3.6))) # *1: 40ms, *3: 64ms, *6: 130ms
-sensor.set_auto_gain(False, gain_db=40)
+sensor.set_auto_exposure(False, exposure_us=int(57200*(1.5))) # *1: 40ms, *3: 64ms, *6: 130ms
+sensor.set_auto_gain(False)
 sensor.set_auto_whitebal(False)
 #sensor.set_windowing((60, 0, 240, 240))
 # Réglages luminosité pour la RT
@@ -30,8 +30,7 @@ BLUE = (0, 0, 255)
 # !!!!!!!!!!!!!!!!!!!!!!! PARAMETRES A CHANGER !!!!!!!!!!!!!!!!!!!!!!!
 # --------------------------------------------------------------------
 
-attackedGoal = BLUE_GOAL
-robot = "SN10"
+robot = "SN9"
 
 # --------------------------------------------------------------------
 
@@ -44,7 +43,7 @@ led = machine.LED("LED_GREEN")
 # PARAMETRES DEPENDANTS DU ROBOT
 if robot == "SN9":
     offset_x = 24
-    offset_y = -10
+    offset_y = -11
 elif robot == "SN10":
     offset_x = 11
     offset_y = 9
@@ -117,7 +116,6 @@ tolerance = 3  # Tolérance de luminosité acceptable
 ADJUST_BRIGHTNESS = False
 
 compteur = 0
-test = True
 
 while(True):
     try:
@@ -141,8 +139,8 @@ while(True):
         else:
             led.off()
 
-        ballCoord = detectBlob((0, 100, 8, 127, 22, 127), 5, False, RED)
-        yellowGoalCoord = detectBlob((0, 19, -2, 127, 2, 127), 80, False, YELLOW)
+        ballCoord = detectBlob((0, 100, 13, 127, 2, 127), 5, False, RED)
+        yellowGoalCoord = detectBlob((25, 33, -8, 7, 13, 127), 80, False, YELLOW)
         blueGoalCoord = detectBlob((7, 18, -128, -5, -128, 8), 80, False, BLUE)
 
         #if ADJUST_BRIGHTNESS == True:
