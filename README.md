@@ -1,2 +1,2 @@
 # ball-recog
-Dernier modèle d'IA pour la reconnaissance de la balle
+Ludovatech team's 2023-2024 camera code
