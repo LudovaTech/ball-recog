@@ -1,9 +1,45 @@
 import sensor, image, time, math, machine
 
+
+
+
+
+
+
+
+
+
+#--------------------------PARAMETRES A CHANGER !!!!!-------------------------------
+
+# Luminosité (entre 0 et 2)
+brightness = 0.3
+
+# Centre du robot, il faut aligner la petite croix blanche au milieu de la vis sur l'image à droite
+offset_x = 31
+offset_y = -29
+
+# Couleurs de la balle et des goals (Tools -> Machine Vision -> Threshold Editor -> Frame Buffer
+ballColors = (0, 100, 2, 127, 29, 127)
+yellowGoalColors = (0, 100, -7, 2, 11, 127)
+blueGoalColors = (11, 100, -128, 127, -128, -5)
+
+#-----------------------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
 sensor.reset()
 sensor.set_pixformat(sensor.RGB565)
 sensor.set_framesize(sensor.QVGA)
-sensor.set_auto_exposure(False, exposure_us=int(57200*(1.5))) # *1: 40ms, *3: 64ms, *6: 130ms
+sensor.set_auto_exposure(False, exposure_us=int(57200*brightness)) # *1: 40ms, *3: 64ms, *6: 130ms
 sensor.set_auto_gain(False)
 sensor.set_auto_whitebal(False)
 #sensor.set_windowing((60, 0, 240, 240))
@@ -26,13 +62,7 @@ RED = (255, 0, 0)
 YELLOW = (255, 255, 0)
 BLUE = (0, 0, 255)
 
-
-# !!!!!!!!!!!!!!!!!!!!!!! PARAMETRES A CHANGER !!!!!!!!!!!!!!!!!!!!!!!
-# --------------------------------------------------------------------
-
-robot = "SN9"
-
-# --------------------------------------------------------------------
+robot = "SN10"
 
 
 # INSTANCES
@@ -41,12 +71,12 @@ uart.init(115200, bits=8, parity=None, stop=1, timeout_char=1000)
 led = machine.LED("LED_GREEN")
 
 # PARAMETRES DEPENDANTS DU ROBOT
-if robot == "SN9":
+"""if robot == "SN9":
     offset_x = 24
     offset_y = -11
 elif robot == "SN10":
     offset_x = 11
-    offset_y = 9
+    offset_y = 9"""
 
 
 def realX(x):
@@ -125,8 +155,8 @@ while(True):
         #img.gamma(gamma=1, brightness=0, contrast=1)
 
         # radius = 164 pour SN9 et radius = 156 pour SN10
-        #img.draw_circle(realX(0), realY(0), 24, color=(0, 0, 0), fill=True)
-        #img.draw_circle(realX(0), realY(0), 172, color=(0, 0, 0), thickness= 100, fill=False)
+        img.draw_circle(realX(0), realY(0), 25, color=(0, 0, 0), fill=True)
+        img.draw_circle(realX(0), realY(0), 170, color=(0, 0, 0), thickness= 100, fill=False)
         img.draw_circle(realX(0), realY(0), 1)
 
         #stats = img.get_statistics()
@@ -139,9 +169,9 @@ while(True):
         else:
             led.off()
 
-        ballCoord = detectBlob((0, 100, 13, 127, 2, 127), 5, False, RED)
-        yellowGoalCoord = detectBlob((25, 33, -8, 7, 13, 127), 80, False, YELLOW)
-        blueGoalCoord = detectBlob((7, 18, -128, -5, -128, 8), 80, False, BLUE)
+        ballCoord = detectBlob(ballColors, 5, False, RED)
+        yellowGoalCoord = detectBlob(yellowGoalColors, 80, False, YELLOW)
+        blueGoalCoord = detectBlob(blueGoalColors, 80, False, BLUE)
 
         #if ADJUST_BRIGHTNESS == True:
 
