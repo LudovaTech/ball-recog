@@ -12,16 +12,17 @@ import sensor, image, time, math, machine
 #--------------------------PARAMETRES A CHANGER !!!!!-------------------------------
 
 # Luminosité (entre 0 et 2)
-brightness = 0.3
+brightness = 2.0
 
 # Centre du robot, il faut aligner la petite croix blanche au milieu de la vis sur l'image à droite
-offset_x = 31
-offset_y = -29
+offset_x = 15
+offset_y = 0
 
 # Couleurs de la balle et des goals (Tools -> Machine Vision -> Threshold Editor -> Frame Buffer
-ballColors = (0, 100, 2, 127, 29, 127)
-yellowGoalColors = (0, 100, -7, 2, 11, 127)
-blueGoalColors = (11, 100, -128, 127, -128, -5)
+ballColors = (0, 100, 26, 127, 1, 127)
+yellowGoalColors = (0, 100, -16, 12, 25, 127)
+blueGoalColors = (0, 100, -128, -1, -128, -20)
+# Télécharger le code dans la caméra (Tools -> Save open script to OpenMV Cam -> Yes)
 
 #-----------------------------------------------------------------------------------
 
@@ -155,8 +156,8 @@ while(True):
         #img.gamma(gamma=1, brightness=0, contrast=1)
 
         # radius = 164 pour SN9 et radius = 156 pour SN10
-        img.draw_circle(realX(0), realY(0), 25, color=(0, 0, 0), fill=True)
-        img.draw_circle(realX(0), realY(0), 170, color=(0, 0, 0), thickness= 100, fill=False)
+        img.draw_circle(realX(0), realY(0), 32, color=(0, 0, 0), fill=True)
+        img.draw_circle(realX(0), realY(0), 170, color=(0, 0, 0), thickness= 110, fill=False)
         img.draw_circle(realX(0), realY(0), 1)
 
         #stats = img.get_statistics()
